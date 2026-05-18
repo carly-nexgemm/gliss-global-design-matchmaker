@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gliss — Global Design Matchmaker</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,600;1,9..144,700&family=Urbanist:wght@600;700;900&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN (JIT) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            fraunces: ['Fraunces', 'Georgia', 'serif'],
+            urbanist: ['Urbanist', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- React 18 + ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Babel Standalone (JSX + TypeScript) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    .font-fraunces { font-family: 'Fraunces', Georgia, serif; }
+    .font-urbanist { font-family: 'Urbanist', system-ui, sans-serif; }
+
+    /* Modal fade-in animation (replaces tailwindcss-animate plugin) */
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .modal-animate {
+      animation: modalIn 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* Map region cursor */
+    .map-region { cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="typescript,react">
+    const { useState, useEffect } = React;
+
+    // ── Type definitions (stripped by Babel) ──────────────────────────────────
+    interface Motif {
+      id: string;
+      name: string;
+      origin: string;
+      originDetail: string;
+      clue: string;
+      modernConnection: string;
+      svg: string;
+      lineArtSvg: string;
+      fact: string;
+      accentClass: string;
+    }
+
+    interface GlissClass {
+      title: string;
+      instructor: string;
+      category: string;
+      price: string;
+      duration: string;
+      glassClass: string;
+    }
+
+    // ── App ───────────────────────────────────────────────────────────────────
+    function App() {
+
+      // 1. Motif database
+      const motifs: Motif[] = [
+        {
+          id: "navajo",
+          name: "Navajo Eyedazzler",
+          origin: "North America",
+          originDetail: "Southwest US (Diné)",
+          clue: "A vibrant arrangement of saw-toothed geometric zigzags woven with extreme optical vibration. Centuries after its inception, this dynamic motif directly shaped mid-century textile designers and the 1960s Optical Art (Op Art) movement.",
+          modernConnection: "Frequently celebrated in high-end mid-century modern upholstery, luxury cabin rugs, and contemporary Southwestern interior design.",
+          svg: `
+            <svg viewBox="0 0 100 100" class="w-full h-full">
+              <rect width="100" height="100" fill="#FBF9F5" />
+              <polygon points="50,10 90,50 50,90 10,50" stroke="#D43A10" stroke-width="1.5" fill="#F0D1D8" opacity="0.9" />
+              <polygon points="50,22 78,50 50,78 22,50" stroke="#5A2C22" stroke-width="1.5" fill="#B3C5C0" opacity="0.9" />
+              <polygon points="50,35 65,50 50,65 35,50" stroke="#1A1A1A" stroke-width="1" fill="#FFB703" />
+              <path d="M 0,0 L 25,25 L 50,0 L 75,25 L 100,0" stroke="#1A1A1A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+              <path d="M 0,100 L 25,75 L 50,100 L 75,75 L 100,100" stroke="#1A1A1A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            </svg>
+          `,
+          lineArtSvg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" stroke="#1A1A1A" fill="none" stroke-width="1"><rect width="100" height="100" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2" /><polygon points="50,10 90,50 50,90 10,50"/><polygon points="50,22 78,50 50,78 22,50"/><polygon points="50,35 65,50 50,65 35,50"/><path d="M 0,0 L 25,25 L 50,0 L 75,25 L 100,0 M 0,100 L 25,75 L 50,100 L 75,75 L 100,100"/></svg>`,
+          fact: "Navajo weavers in the late 19th century integrated newly traded synthetic dyes to weave complex geometric variations. Their dazzling optical layout preceded the Western abstract art movement by almost seventy years.",
+          accentClass: "peach"
+        },
+        {
+          id: "sashiko",
+          name: "Sashiko (Asanoha)",
+          origin: "Asia-Pacific",
+          originDetail: "Japan",
+          clue: "An intricate, interlocking star-mesh geometry designed to resemble resilient hemp leaves. Historically stitched onto deep indigo garments to strengthen fabrics, this grid embodies rugged organic structural balance.",
+          modernConnection: "Seen stitched onto limited-edition Nike performance streetwear, minimalist tech backpacks, and raw selvedge denim overlays.",
+          svg: `
+            <svg viewBox="0 0 100 100" class="w-full h-full">
+              <defs>
+                <pattern id="sashikoAppPattern" width="30" height="51.96" patternUnits="userSpaceOnUse">
+                  <path d="M 0 0 L 30 0 L 15 25.98 Z" />
+                  <path d="M 15 25.98 L 30 51.96 L 0 51.96 Z" />
+                  <path d="M 0 0 L 15 25.98 M 30 0 L 15 25.98 M 0 51.96 L 15 25.98 M 30 51.96 L 15 25.98" />
+                  <path d="M 0 25.98 L 30 25.98 M 15 0 L 15 51.96" />
+                </pattern>
+              </defs>
+              <rect width="100" height="100" fill="#1A365D" />
+              <rect width="100" height="100" fill="url(#sashikoAppPattern)" stroke="#FFFFFF" stroke-width="1.4" stroke-dasharray="3,3" />
+            </svg>
+          `,
+          lineArtSvg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" stroke="#1A1A1A" fill="none" stroke-width="1"><rect width="100" height="100" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2" /><path d="M0,0 L100,100 M100,0 L0,100 M50,0 L50,100 M0,50 L100,50"/></svg>`,
+          fact: "Sashiko means 'little stabs,' a sewing art born from practicality during the Edo period. It combined warmth and beauty, helping farmers extend the lifespans of their family indigo garments.",
+          accentClass: "sky"
+        },
+        {
+          id: "dreamtime",
+          name: "Dreamtime Dotways",
+          origin: "Asia-Pacific",
+          originDetail: "Indigenous Australia",
+          clue: "A fluid, natural mapping system built from concentric circles and organic dot-path networks. This visual lexicon is used to communicate topographical waterholes, visual navigation maps, and ancestral spirit pathways.",
+          modernConnection: "Employed on striking modern architectural installations, premium home textile lines, and iconic international aviation corporate liveries (such as Qantas).",
+          svg: `
+            <svg viewBox="0 0 100 100" class="w-full h-full">
+              <rect width="100" height="100" fill="#5A2C22" />
+              <circle cx="15" cy="85" r="2" fill="#FFB703" />
+              <circle cx="20" cy="80" r="2" fill="#F7F6F2" />
+              <circle cx="24" cy="73" r="2.2" fill="#FFB703" />
+              <circle cx="27" cy="65" r="2" fill="#D43A10" />
+              <circle cx="31" cy="58" r="2" fill="#F7F6F2" />
+              <circle cx="36" cy="52" r="2.2" fill="#FFB703" />
+              <circle cx="45" cy="45" r="14" stroke="#FFB703" stroke-width="1.5" stroke-dasharray="2,2" fill="none" />
+              <circle cx="45" cy="45" r="9" stroke="#F7F6F2" stroke-width="1.2" stroke-dasharray="1.5,1.5" fill="none" />
+              <circle cx="45" cy="45" r="4" fill="#D43A10" />
+              <circle cx="35" cy="40" r="1.8" fill="#FFB703" />
+              <circle cx="38" cy="35" r="1.8" fill="#F7F6F2" />
+              <circle cx="45" cy="32" r="2" fill="#FFB703" />
+              <circle cx="52" cy="34" r="1.8" fill="#D43A10" />
+              <circle cx="56" cy="40" r="1.8" fill="#F7F6F2" />
+              <circle cx="57" cy="48" r="2" fill="#FFB703" />
+              <circle cx="54" cy="55" r="1.8" fill="#D43A10" />
+              <circle cx="48" cy="58" r="1.8" fill="#F7F6F2" />
+              <circle cx="40" cy="56" r="2" fill="#FFB703" />
+              <circle cx="52" cy="48" r="2" fill="#FFB703" />
+              <circle cx="59" cy="52" r="2" fill="#F7F6F2" />
+              <circle cx="65" cy="57" r="2.2" fill="#D43A10" />
+              <circle cx="70" cy="63" r="2" fill="#FFB703" />
+              <circle cx="78" cy="70" r="10" stroke="#FFB703" stroke-width="1.2" stroke-dasharray="2,2" fill="none" />
+              <circle cx="78" cy="70" r="6" stroke="#D43A10" stroke-width="1" fill="none" />
+              <circle cx="78" cy="70" r="3" fill="#F7F6F2" />
+              <circle cx="84" cy="64" r="2" fill="#FFB703" />
+              <circle cx="88" cy="57" r="2" fill="#F7F6F2" />
+              <circle cx="91" cy="49" r="2.2" fill="#D43A10" />
+              <circle cx="93" cy="41" r="2" fill="#FFB703" />
+              <circle cx="94" cy="33" r="1.8" fill="#F7F6F2" />
+              <circle cx="92" cy="25" r="2" fill="#D43A10" />
+              <circle cx="88" cy="18" r="1.8" fill="#FFB703" />
+              <circle cx="15" cy="20" r="8" stroke="#F7F6F2" stroke-width="1" stroke-dasharray="2,2" fill="none" />
+              <circle cx="15" cy="20" r="4" fill="#FFB703" />
+              <circle cx="10" cy="12" r="1.5" fill="#F7F6F2" />
+              <circle cx="18" cy="10" r="1.5" fill="#D43A10" />
+              <circle cx="24" cy="15" r="1.8" fill="#FFB703" />
+              <circle cx="26" cy="23" r="1.5" fill="#F7F6F2" />
+              <circle cx="21" cy="30" r="1.8" fill="#D43A10" />
+              <circle cx="13" cy="31" r="1.5" fill="#FFB703" />
+              <circle cx="62" cy="85" r="1.5" fill="#F7F6F2" />
+              <circle cx="67" cy="89" r="1.8" fill="#FFB703" />
+              <circle cx="72" cy="84" r="1.2" fill="#D43A10" />
+            </svg>
+          `,
+          lineArtSvg: `
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" stroke="#1A1A1A" fill="none" stroke-width="1">
+              <rect width="100" height="100" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2" />
+              <circle cx="15" cy="85" r="2" /><circle cx="20" cy="80" r="2" /><circle cx="24" cy="73" r="2.2" />
+              <circle cx="27" cy="65" r="2" /><circle cx="31" cy="58" r="2" /><circle cx="36" cy="52" r="2.2" />
+              <circle cx="45" cy="45" r="14" stroke-dasharray="2,2" /><circle cx="45" cy="45" r="9" stroke-dasharray="1.5,1.5" />
+              <circle cx="45" cy="45" r="4" fill="#1A1A1A" />
+              <circle cx="35" cy="40" r="1.8" /><circle cx="38" cy="35" r="1.8" /><circle cx="45" cy="32" r="2" />
+              <circle cx="52" cy="34" r="1.8" /><circle cx="56" cy="40" r="1.8" /><circle cx="57" cy="48" r="2" />
+              <circle cx="54" cy="55" r="1.8" /><circle cx="48" cy="58" r="1.8" /><circle cx="40" cy="56" r="2" />
+              <circle cx="52" cy="48" r="2" /><circle cx="59" cy="52" r="2" /><circle cx="65" cy="57" r="2.2" />
+              <circle cx="70" cy="63" r="2" />
+              <circle cx="78" cy="70" r="10" stroke-dasharray="2,2" /><circle cx="78" cy="70" r="6" />
+              <circle cx="78" cy="70" r="3" fill="#1A1A1A" />
+              <circle cx="84" cy="64" r="2" /><circle cx="88" cy="57" r="2" /><circle cx="91" cy="49" r="2.2" />
+              <circle cx="93" cy="41" r="2" /><circle cx="94" cy="33" r="1.8" /><circle cx="92" cy="25" r="2" />
+              <circle cx="88" cy="18" r="1.8" />
+              <circle cx="15" cy="20" r="8" stroke-dasharray="2,2" /><circle cx="15" cy="20" r="4" fill="#1A1A1A" />
+              <circle cx="10" cy="12" r="1.5" /><circle cx="18" cy="10" r="1.5" /><circle cx="24" cy="15" r="1.8" />
+              <circle cx="26" cy="23" r="1.5" /><circle cx="21" cy="30" r="1.8" /><circle cx="13" cy="31" r="1.5" />
+              <circle cx="62" cy="85" r="1.5" /><circle cx="67" cy="89" r="1.8" /><circle cx="72" cy="84" r="1.2" />
+            </svg>
+          `,
+          fact: "Indigenous Australian pointillist dot art is a sacred technique used to hide internal sacred geography from uninitiated viewers, communicating land mapping non-verbally.",
+          accentClass: "peach"
+        },
+        {
+          id: "bauhaus",
+          name: "The Bauhaus Grid",
+          origin: "Europe",
+          originDetail: "Germany",
+          clue: "An asymmetrical primary-color grid that merges absolute functional economy with structural geometry. This legendary layout established 'form follows function' and laid the blueprint for minimalist graphic layout structure.",
+          modernConnection: "The direct ancestor of clean mobile interface grids, Apple's iOS layout systems, and CSS grid frameworks used by tech developers.",
+          svg: `
+            <svg viewBox="0 0 100 100" class="w-full h-full">
+              <rect width="100" height="100" fill="#F7F6F2" stroke="#1A1A1A" stroke-width="3" />
+              <rect width="40" height="40" fill="#D43A10" stroke="#1A1A1A" stroke-width="3" />
+              <rect x="70" y="50" width="30" height="50" fill="#B8D0EB" stroke="#1A1A1A" stroke-width="3" />
+              <rect x="0" y="80" width="30" height="20" fill="#FFB703" stroke="#1A1A1A" stroke-width="3" />
+              <line x1="40" y1="0" x2="40" y2="80" stroke="#1A1A1A" stroke-width="3" />
+              <line x1="0" y1="80" x2="70" y2="80" stroke="#1A1A1A" stroke-width="3" />
+              <line x1="70" y1="0" x2="70" y2="100" stroke="#1A1A1A" stroke-width="3" />
+              <line x1="40" y1="40" x2="70" y2="40" stroke="#1A1A1A" stroke-width="3" />
+            </svg>
+          `,
+          lineArtSvg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" stroke="#1A1A1A" fill="none" stroke-width="1"><rect width="100" height="100" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2" /><line x1="40" y1="0" x2="40" y2="80"/><line x1="0" y1="80" x2="70" y2="80"/><line x1="70" y1="0" x2="70" y2="100"/></svg>`,
+          fact: "Founded in Weimar in 1919, the Bauhaus school sought to unify creative artistic craft with mass industrial production, forming modern corporate industrial design systems.",
+          accentClass: "sky"
+        },
+        {
+          id: "chacana",
+          name: "Chacana Cross",
+          origin: "South America",
+          originDetail: "Andean Mountains",
+          clue: "A mathematically calculated stepped cross with a central circular core representing the layered levels of the Andean spiritual universe. Its perfect bilateral geometry embodies balance and dynamic spatial unity.",
+          modernConnection: "Lauded by sustainable startups, organic agricultural cooperatives, and geometric corporate logo marks signaling harmony.",
+          svg: `
+            <svg viewBox="0 0 100 100" class="w-full h-full">
+              <rect width="100" height="100" fill="#7A9E87" />
+              <g transform="translate(10, 10)">
+                <path d="M 30,0 L 50,0 L 50,20 L 70,20 L 70,30 L 80,30 L 80,50 L 70,50 L 70,60 L 50,60 L 50,80 L 30,80 L 30,60 L 10,60 L 10,50 L 0,50 L 0,30 L 10,30 L 10,20 L 30,20 Z" fill="#F7F6F2" />
+                <circle cx="40" cy="40" r="10" fill="#7A9E87" />
+              </g>
+            </svg>
+          `,
+          lineArtSvg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" stroke="#1A1A1A" fill="none" stroke-width="1"><rect width="100" height="100" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2" /><path d="M 40,10 L 60,10 L 60,30 L 80,30 L 80,40 L 90,40 L 90,60 L 80,60 L 80,70 L 60,70 L 60,90 L 40,90 L 40,70 L 20,70 L 20,60 L 10,60 L 10,40 L 20,40 L 20,30 L 40,30 Z"/></svg>`,
+          fact: "The Chacana cross served as a seasonal planting compass and celestial navigator in South American Incan culture, showing how math and cosmological beliefs converge.",
+          accentClass: "gold"
+        },
+        {
+          id: "zellij",
+          name: "Zellij Tessellation",
+          origin: "Africa",
+          originDetail: "Morocco",
+          clue: "An intricate, non-overlapping geometric mosaic system constructed from hand-chiseled terra-cotta tiles. This spatial pattern utilizes algebraic symmetry rules to create infinite radial harmony.",
+          modernConnection: "Informs structural privacy screens in high-end desert villas, boutique hotel courtyards, and luxury cosmetics container embossing.",
+          svg: `
+            <svg viewBox="0 0 100 100" class="w-full h-full">
+              <rect width="100" height="100" fill="#1A1A1A" />
+              <g stroke="#FFB703" fill="none" stroke-width="1.8">
+                <rect x="25" y="25" width="50" height="50" fill="#B8D0EB" fill-opacity="0.2" />
+                <rect x="25" y="25" width="50" height="50" transform="rotate(45 50 50)" fill="#B8D0EB" fill-opacity="0.1" />
+                <circle cx="50" cy="50" r="16" fill="#7A9E87" />
+                <path d="M 50,0 L 50,100 M 0,50 L 100,50 M 15,15 L 85,85 M 15,85 L 85,15" stroke-width="0.8" />
+              </g>
+              <circle cx="50" cy="50" r="5" fill="#D43A10" />
+            </svg>
+          `,
+          lineArtSvg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" stroke="#1A1A1A" fill="none" stroke-width="1"><rect width="100" height="100" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2" /><rect x="25" y="25" width="50" height="50"/><rect x="25" y="25" width="50" height="50" transform="rotate(45 50 50)"/></svg>`,
+          fact: "Moroccan Zellij tile artisans undergo years of intensive geometry training. They arrange multi-sided shapes without gaps, proving profound advanced mathematical theorems manually.",
+          accentClass: "lavender"
+        }
+      ];
+
+      const regions = [
+        { name: "North America", pinX: "210", pinY: "180" },
+        { name: "South America", pinX: "230", pinY: "380" },
+        { name: "Europe",        pinX: "490", pinY: "120" },
+        { name: "Africa",        pinX: "490", pinY: "270" },
+        { name: "Asia-Pacific",  pinX: "740", pinY: "250" }
+      ];
+
+      const recommendedClasses: GlissClass[] = [
+        {
+          title: "The Bauhaus Eye: Minimalist UX Geometry",
+          instructor: "Dieter Rams II",
+          category: "Digital Design & Grid Systems",
+          price: "$120",
+          duration: "4 Sessions &bull; On Demand",
+          glassClass: "sky"
+        },
+        {
+          title: "The Indigo Vat: Shibori & Sashiko Threadwork",
+          instructor: "Aoi Tanaka",
+          category: "Textile Craftsmanship",
+          price: "$85",
+          duration: "Weekend Intensive",
+          glassClass: "peach"
+        },
+        {
+          title: "Symmetry in Clay: Geometric Handbuilding",
+          instructor: "Marcus Aurel",
+          category: "Fine Ceramics",
+          price: "$140",
+          duration: "6 Sessions &bull; Hybrid",
+          glassClass: "lavender"
+        }
+      ];
+
+      const glassAccents: Record<string, string> = {
+        sky:     'bg-[#B8D0EB]/20 border-[#B8D0EB]/40',
+        gold:    'bg-[#F6EBC8]/30 border-[#F6EBC8]/50',
+        peach:   'bg-[#F0D1D8]/20 border-[#F0D1D8]/40',
+        lavender:'bg-[#B3C5C0]/20 border-[#B3C5C0]/40'
+      };
+
+      const [currentIdx, setCurrentIdx]             = useState<number>(0);
+      const [selectedRegion, setSelectedRegion]     = useState<string>("");
+      const [score, setScore]                       = useState<number>(0);
+      const [showModal, setShowModal]               = useState<boolean>(false);
+      const [lastAnswerCorrect, setLastAnswerCorrect] = useState<boolean>(false);
+      const [isFinished, setIsFinished]             = useState<boolean>(false);
+
+      const activeMotif = motifs[currentIdx];
+
+      const handleSelectRegion = (regionName: string) => setSelectedRegion(regionName);
+
+      const handleSubmit = () => {
+        if (!selectedRegion) return;
+        const correct = selectedRegion === activeMotif.origin;
+        setLastAnswerCorrect(correct);
+        if (correct) setScore(prev => prev + 1);
+        setShowModal(true);
+      };
+
+      const handleNext = () => {
+        setShowModal(false);
+        setSelectedRegion("");
+        if (currentIdx < motifs.length - 1) {
+          setCurrentIdx(prev => prev + 1);
+        } else {
+          setIsFinished(true);
+        }
+      };
+
+      const handleRestart = () => {
+        setScore(0);
+        setCurrentIdx(0);
+        setSelectedRegion("");
+        setIsFinished(false);
+      };
+
+      const handleDownloadColoring = (motif: Motif) => {
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) return;
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>gliss Printable Canvas - ${motif.name}</title>
+              <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;1,9..144,600&family=Urbanist:wght@600;700;900&display=swap" rel="stylesheet">
+              <style>
+                body { background-color:#FFFFFF!important; color:#1A1A1A; font-family:'Urbanist',sans-serif; margin:0; padding:40px; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; box-sizing:border-box; }
+                .container { background-color:#FFFFFF!important; border:2px solid #1A1A1A; padding:50px; border-radius:32px; max-width:600px; width:100%; text-align:center; box-shadow:0 15px 35px rgba(26,26,26,0.06); box-sizing:border-box; }
+                .logo { font-family:'Fraunces',serif; font-style:italic; font-size:36px; font-weight:700; margin-bottom:4px; }
+                .logo span { color:#D43A10; }
+                .logo-sub { font-family:'Urbanist',sans-serif; font-size:13px; font-weight:900; color:#D43A10; text-transform:uppercase; letter-spacing:3px; margin-top:-6px; margin-bottom:24px; }
+                .title { font-family:'Fraunces',serif; font-size:30px; font-weight:700; margin-bottom:8px; }
+                .subtitle { font-size:13px; color:#5A2C22; margin-bottom:40px; text-transform:uppercase; letter-spacing:2px; font-weight:700; }
+                .canvas-wrapper { background-color:#FFFFFF!important; border:1px solid #1A1A1A; padding:24px; border-radius:20px; margin-bottom:40px; display:inline-block; }
+                .canvas-wrapper svg { width:320px; height:320px; display:block; }
+                .footer-notes { font-size:13px; color:#1A1A1A; line-height:1.6; max-width:480px; margin:0 auto; }
+                .footer-notes em { font-family:'Fraunces',serif; font-style:italic; font-weight:600; color:#D43A10; }
+                .btn-print { background-color:#D43A10; color:#FFFFFF; border:none; padding:14px 28px; border-radius:14px; font-weight:900; font-family:'Urbanist',sans-serif; font-size:14px; cursor:pointer; margin-bottom:30px; transition:transform 0.2s; box-shadow:0 8px 20px rgba(212,58,16,0.25); }
+                .btn-print:hover { transform:translateY(-2px); }
+                @media print { body{padding:0;min-height:auto} .container{border:none;box-shadow:none;padding:20px} .no-print{display:none!important} }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <button class="btn-print no-print" onclick="window.print()">Print Canvas to PDF</button>
+                <div class="logo">gl<span>i</span>ss</div>
+                <div class="logo-sub">gliss.live</div>
+                <div class="title">${motif.name} Motif</div>
+                <div class="subtitle">Geographic Heritage: ${motif.originDetail}</div>
+                <div class="canvas-wrapper">${motif.lineArtSvg}</div>
+                <p class="footer-notes">
+                  <em>"gliss is where people with good taste go to learn something beautiful."</em><br>
+                  Bring this symmetrical heritage pattern to life offline with physical watercolors, colored pencils, or ink.
+                </p>
+              </div>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+      };
+
+      return (
+        <div className="bg-[#F7F6F2] font-urbanist min-h-screen text-[#1A1A1A] py-10 px-4 sm:px-6 relative flex flex-col justify-between" style={{fontFamily:"'Urbanist', system-ui, sans-serif", userSelect:"none"}}>
+
+          {/* Header */}
+          <header className="max-w-5xl w-full mx-auto flex justify-between items-center border-b border-[#1A1A1A]/10 pb-6 mb-10">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-[#F7F6F2] border border-[#1A1A1A]/15 rounded-2xl flex items-center justify-center shadow-sm">
+                <svg viewBox="0 0 40 40" className="w-8 h-8">
+                  <text x="12" y="27" fontFamily="'Fraunces', Georgia, serif" fontStyle="italic" fontWeight="600" fontSize="24" fill="#1A1A1A">g</text>
+                  <circle cx="28" cy="12" r="3" fill="#D43A10" />
+                </svg>
+              </div>
+              <div>
+                <span style={{fontFamily:"'Fraunces', Georgia, serif", fontStyle:"italic"}} className="text-2xl font-semibold tracking-tight text-[#1A1A1A]">
+                  gl<span className="text-[#D43A10]">i</span>ss
+                </span>
+                <span className="block text-xs uppercase tracking-[0.18em] text-[#1A1A1A]/60 font-bold mt-0.5">
+                  THE OS FOR THE PASSION ECONOMY
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <a href="https://gliss.live" target="_blank" rel="noreferrer"
+                className="text-xs tracking-[0.2em] font-black text-[#D43A10] hover:text-[#D43A10]/85 transition-colors uppercase"
+                style={{fontFamily:"'Urbanist', system-ui, sans-serif"}}>
+                gliss.live
+              </a>
+            </div>
+          </header>
+
+          {/* Main */}
+          <main className="max-w-5xl w-full mx-auto flex-grow">
+
+            {/* Intro */}
+            <div className="text-center mb-10">
+              <h2 style={{fontFamily:"'Fraunces', Georgia, serif"}} className="text-4xl sm:text-5xl font-bold text-[#1A1A1A] tracking-tight mb-2">
+                The Design Matchmaker
+              </h2>
+              <p className="text-base sm:text-lg text-[#1A1A1A]/70 max-w-2xl mx-auto leading-relaxed">
+                Uncover the extraordinary thread binding historical world traditions with high-vibration modern design patterns. Designed for art lovers of all ages.
+              </p>
+            </div>
+
+            {/* Card grid */}
+            <div className="bg-white/60 backdrop-blur-md rounded-[3rem] border border-black/5 shadow-md overflow-hidden p-6 sm:p-10">
+
+              {!isFinished ? (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+
+                  {/* Left column */}
+                  <div className="lg:col-span-5 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-xs font-bold uppercase tracking-wider text-[#D43A10] bg-[#D43A10]/10 px-3 py-1 rounded-xl">
+                          Level {currentIdx + 1} of {motifs.length}
+                        </span>
+                        <span className="text-sm font-bold text-[#1A1A1A]/60">
+                          Progress: {score} Correct
+                        </span>
+                      </div>
+                      <h3 style={{fontFamily:"'Fraunces', Georgia, serif"}} className="text-2xl font-bold text-[#1A1A1A] mb-3">
+                        Analyze the geometry
+                      </h3>
+                      <p className="text-sm sm:text-base text-[#1A1A1A]/80 leading-relaxed italic mb-4">
+                        "{activeMotif.clue}"
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col items-center">
+                      <div className="w-full aspect-square bg-[#F7F6F2] rounded-[2rem] border border-black/10 shadow-sm p-8 flex items-center justify-center relative overflow-hidden group">
+                        <div
+                          className="w-full h-full transition-transform duration-500 group-hover:scale-105"
+                          dangerouslySetInnerHTML={{ __html: activeMotif.svg }}
+                        />
+                        <div className="absolute bottom-2 right-3 text-[10px] uppercase font-bold text-[#1A1A1A]/40 tracking-wider">
+                          Symmetry Card
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDownloadColoring(activeMotif)}
+                        className="mt-3 mb-4 flex items-center gap-2 text-xs font-black text-[#1A1A1A]/60 hover:text-[#D43A10] transition-colors py-1 px-3 rounded-lg hover:bg-black/5 active:scale-95"
+                      >
+                        <span>🖨️</span>
+                        <span>Printable Canvas</span>
+                      </button>
+                    </div>
+
+                    <div className={`rounded-2xl p-4 border ${glassAccents[activeMotif.accentClass] || 'bg-white/60'} transition-all`}>
+                      <span className="text-xs font-bold uppercase tracking-widest text-[#1A1A1A] block mb-1">
+                        🔍 Modern System Link
+                      </span>
+                      <p className="text-xs text-[#1A1A1A]/80 leading-relaxed">
+                        {activeMotif.modernConnection}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right column */}
+                  <div className="lg:col-span-7 flex flex-col justify-between">
+                    <div>
+                      <h3 style={{fontFamily:"'Fraunces', Georgia, serif"}} className="text-xl font-bold text-[#1A1A1A] mb-4 flex items-center gap-2">
+                        📍 Pinpoint the Origin
+                      </h3>
+
+                      {/* Map */}
+                      <div className="w-full bg-[#F7F6F2] rounded-[2rem] border border-black/5 p-4 flex items-center justify-center mb-6 relative shadow-inner">
+                        <svg viewBox="0 0 1000 500" className="w-full h-auto max-h-[250px]">
+                          <g fill="#E2E2DB" stroke="#F7F6F2" strokeWidth="2">
+                            <path d="M 120 80 Q 150 50 250 100 Q 280 150 240 220 Q 200 240 160 280 T 120 300 Q 140 250 100 200 Z"
+                              className={`map-region transition-all ${selectedRegion === "North America" ? "fill-[#B8D0EB]" : "hover:fill-[#B3C5C0]"}`}
+                              onClick={() => handleSelectRegion("North America")} />
+                            <path d="M 230 290 Q 280 320 280 370 Q 260 420 220 480 Q 190 480 200 400 Q 180 350 230 290"
+                              className={`map-region transition-all ${selectedRegion === "South America" ? "fill-[#B8D0EB]" : "hover:fill-[#B3C5C0]"}`}
+                              onClick={() => handleSelectRegion("South America")} />
+                            <path d="M 440 100 Q 480 80 540 90 Q 560 120 530 160 Q 480 180 440 140 Z"
+                              className={`map-region transition-all ${selectedRegion === "Europe" ? "fill-[#B8D0EB]" : "hover:fill-[#B3C5C0]"}`}
+                              onClick={() => handleSelectRegion("Europe")} />
+                            <path d="M 440 180 Q 520 180 560 220 Q 560 280 520 360 Q 480 390 460 360 Q 440 300 420 250 Q 400 200 440 180"
+                              className={`map-region transition-all ${selectedRegion === "Africa" ? "fill-[#B8D0EB]" : "hover:fill-[#B3C5C0]"}`}
+                              onClick={() => handleSelectRegion("Africa")} />
+                            <path d="M 540 90 Q 650 60 800 100 Q 880 140 850 220 Q 750 280 650 250 Q 580 220 560 160 Z"
+                              className={`map-region transition-all ${selectedRegion === "Asia-Pacific" ? "fill-[#B8D0EB]" : "hover:fill-[#B3C5C0]"}`}
+                              onClick={() => handleSelectRegion("Asia-Pacific")} />
+                            <path d="M 750 320 Q 820 320 840 360 Q 800 420 740 380 Z"
+                              className={`map-region transition-all ${selectedRegion === "Asia-Pacific" ? "fill-[#B8D0EB]" : "hover:fill-[#B3C5C0]"}`}
+                              onClick={() => handleSelectRegion("Asia-Pacific")} />
+                          </g>
+                          {regions.map(reg => (
+                            <circle
+                              key={reg.name}
+                              cx={reg.pinX} cy={reg.pinY}
+                              r={selectedRegion === reg.name ? "10" : "6"}
+                              fill={selectedRegion === reg.name ? "#D43A10" : "#1A1A1A"}
+                              className="cursor-pointer transition-all duration-300 stroke-[#F7F6F2] stroke-[1.5]"
+                              onClick={() => handleSelectRegion(reg.name)}
+                            />
+                          ))}
+                        </svg>
+                        <div className="absolute bottom-2 left-3 text-[10px] tracking-wide text-[#1A1A1A]/40 font-bold uppercase">
+                          Interactive Atlas
+                        </div>
+                      </div>
+
+                      {/* Choice grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                        {regions.map(reg => {
+                          const isActive = selectedRegion === reg.name;
+                          return (
+                            <button
+                              key={reg.name}
+                              onClick={() => handleSelectRegion(reg.name)}
+                              className={`p-4 rounded-[2rem] border text-left text-sm font-bold transition-all flex justify-between items-center ${
+                                isActive
+                                  ? 'border-[#1A1A1A] bg-white text-[#1A1A1A] shadow-md'
+                                  : 'border-[#1A1A1A]/10 bg-white/40 hover:border-[#1A1A1A]/30 text-[#1A1A1A]/70'
+                              }`}
+                            >
+                              <span>{reg.name}</span>
+                              <span className={`w-5 h-5 rounded-full border flex items-center justify-center text-xs transition-colors ${
+                                isActive ? 'bg-[#D43A10] border-[#D43A10] text-white' : 'border-[#1A1A1A]/20'
+                              }`}>✓</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="border-t border-[#1A1A1A]/10 pt-6 flex justify-end">
+                      <button
+                        onClick={handleSubmit}
+                        disabled={!selectedRegion}
+                        className={`px-8 py-4 rounded-2xl font-black text-base transition-all shadow-md ${
+                          selectedRegion
+                            ? 'bg-[#D43A10] text-white hover:bg-[#D43A10]/90 active:scale-95'
+                            : 'bg-[#1A1A1A]/10 text-[#1A1A1A]/30 cursor-not-allowed shadow-none'
+                        }`}
+                      >
+                        Submit answer
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+              ) : (
+                <div className="text-center py-12 max-w-xl mx-auto">
+                  <div className="w-20 h-20 bg-[#7A9E87]/15 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg viewBox="0 0 24 24" className="w-10 h-10 text-[#7A9E87]" stroke="currentColor" strokeWidth="2" fill="none">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" />
+                    </svg>
+                  </div>
+                  <h3 style={{fontFamily:"'Fraunces', Georgia, serif"}} className="text-4xl font-bold mb-3 text-[#1A1A1A]">
+                    Journey Completed
+                  </h3>
+                  <p className="text-[#1A1A1A]/70 text-base leading-relaxed mb-8">
+                    You scored <span className="font-bold text-[#D43A10]">{score} out of {motifs.length}</span> correct placements. You've demonstrated a fine, sophisticated eye for human architectural pattern systems.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button
+                      onClick={handleRestart}
+                      className="bg-[#1A1A1A] hover:bg-[#1A1A1A]/90 text-white font-black text-sm px-8 py-4 rounded-2xl shadow-md transition-all active:scale-95"
+                    >
+                      Start matching again
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Recommended Classes */}
+            <section className="max-w-5xl mx-auto mt-20 mb-6">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="h-0.5 bg-[#D43A10] w-12 rounded-full"></div>
+                <h2 style={{fontFamily:"'Fraunces', Georgia, serif"}} className="text-3xl font-bold text-[#1A1A1A]">
+                  Curated Masterclasses on gliss.live
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {recommendedClasses.map((item, idx) => (
+                  <div key={idx} className="bg-white/50 backdrop-blur-md rounded-[2.5rem] border border-black/5 shadow-sm p-6 flex flex-col justify-between hover:shadow-md transition-all duration-300">
+                    <div>
+                      <div className="flex justify-between items-start gap-2 mb-4">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[#1A1A1A]/50 bg-black/5 px-3 py-1 rounded-full">
+                          {item.category}
+                        </span>
+                        <span style={{fontFamily:"'Fraunces', Georgia, serif"}} className="text-xl font-bold italic text-[#D43A10]">
+                          {item.price}
+                        </span>
+                      </div>
+                      <h4 className="text-lg font-black text-[#1A1A1A] leading-tight mb-2">{item.title}</h4>
+                      <p className="text-xs text-[#1A1A1A]/60 font-bold mb-4">Led by {item.instructor}</p>
+                    </div>
+                    <div className="border-t border-[#1A1A1A]/5 pt-4 flex justify-between items-center text-xs text-[#1A1A1A]/70">
+                      <span dangerouslySetInnerHTML={{ __html: item.duration }} />
+                      <a href="https://gliss.live" target="_blank" rel="noreferrer"
+                        className="font-black text-[#D43A10] hover:underline">
+                        Enroll →
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Philosophy section */}
+            <section className="max-w-4xl mx-auto mt-16 mb-10 border-t border-[#1A1A1A]/10 pt-12">
+              <h2 style={{fontFamily:"'Fraunces', Georgia, serif"}} className="text-3xl font-bold text-[#1A1A1A] mb-8 text-center">
+                The Philosophy of Pattern Systems
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-[#1A1A1A]/80 text-sm sm:text-base leading-relaxed">
+                <div>
+                  <h4 style={{fontFamily:"'Fraunces', Georgia, serif"}} className="text-lg font-bold text-[#1A1A1A] mb-2">
+                    Geometric Foundations in Art & Tech
+                  </h4>
+                  <p className="mb-4 text-[#1A1A1A]/70">
+                    Traditional designs represent more than simple adornments. Patterns like the Moroccan Zellij or Japanese Sashiko are algorithms realized by hand. They use complex coordinate shifts, radial axes, and spatial divisions that mirror contemporary software structures.
+                  </p>
+                  <p className="text-[#1A1A1A]/70">
+                    At Gliss, we believe that understanding these historic blueprints fosters deep visual craftsmanship. It bridges the gap between classic arts and high-level design systems, nurturing highly skilled visual minds.
+                  </p>
+                </div>
+                <div>
+                  <h4 style={{fontFamily:"'Fraunces', Georgia, serif"}} className="text-lg font-bold text-[#1A1A1A] mb-2">
+                    STEAM Integration for Families
+                  </h4>
+                  <p className="mb-4 text-[#1A1A1A]/70">
+                    Encouraging young learners to identify lines of symmetry, mathematical step-ratios, and pointillist dotways builds invaluable spatial reasoning skills. We provide downloadable, scalable vectors directly on match milestones, prompting offline exploration with watercolors and physical pencils.
+                  </p>
+                  <p className="text-[#1A1A1A]/70">
+                    This screens-as-secondary philosophy guarantees that technology serves as a launchpad for tactile, beautiful physical work in the home or classroom.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+          </main>
+
+          {/* Answer modal */}
+          {showModal && (
+            <div className="fixed inset-0 bg-[#1A1A1A]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-[3rem] border border-black/5 p-6 sm:p-10 max-w-lg w-full shadow-xl relative modal-animate">
+
+                {lastAnswerCorrect ? (
+                  <div className="rounded-2xl bg-[#7A9E87] text-white p-5 mb-6 flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl shrink-0">✓</div>
+                    <div>
+                      <h4 style={{fontFamily:"'Fraunces', Georgia, serif"}} className="text-xl font-bold">Splendid Match!</h4>
+                      <span className="text-xs uppercase tracking-wider font-bold opacity-80">
+                        Perfect alignment with {activeMotif.originDetail}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl bg-[#5A2C22]/10 border border-[#5A2C22] text-[#5A2C22] p-5 mb-6 flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-[#5A2C22]/15 flex items-center justify-center text-xl font-bold shrink-0">!</div>
+                    <div>
+                      <h4 style={{fontFamily:"'Fraunces', Georgia, serif"}} className="text-xl font-bold text-[#5A2C22]">Not quite matched</h4>
+                      <span className="text-xs uppercase tracking-wider font-bold opacity-80">
+                        This belongs in {activeMotif.origin} ({activeMotif.originDetail})
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="mb-6">
+                  <span className="text-xs font-bold uppercase tracking-widest text-[#1A1A1A]/40 block mb-1">Historical Context</span>
+                  <p className="text-sm text-[#1A1A1A]/80 leading-relaxed mb-4">{activeMotif.fact}</p>
+                  <span className="text-xs font-bold uppercase tracking-widest text-[#1A1A1A]/40 block mb-1">Modern Impact</span>
+                  <p className="text-sm text-[#1A1A1A]/80 leading-relaxed">{activeMotif.modernConnection}</p>
+                </div>
+
+                <div className="bg-[#F7F6F2] border border-[#1A1A1A]/10 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div>
+                    <span className="text-xs font-bold text-[#D43A10] block uppercase tracking-wider">Hands-on coloring</span>
+                    <p className="text-xs text-[#1A1A1A]/70">Parents, save today's motif canvas to a clean PDF sheet.</p>
+                  </div>
+                  <button
+                    onClick={() => handleDownloadColoring(activeMotif)}
+                    className="bg-white border border-[#1A1A1A]/10 hover:border-[#1A1A1A]/30 text-[#1A1A1A] font-bold text-xs px-4 py-2 rounded-xl shadow-sm transition-all shrink-0 active:scale-95"
+                  >
+                    🖨️ Printable Canvas
+                  </button>
+                </div>
+
+                <div className="flex justify-end gap-3 border-t border-[#1A1A1A]/10 pt-4">
+                  <button
+                    onClick={handleNext}
+                    className="bg-[#D43A10] hover:bg-[#D43A10]/95 text-white font-black text-sm px-6 py-3 rounded-xl shadow-md transition-all active:scale-95"
+                  >
+                    {currentIdx < motifs.length - 1 ? "Next motif →" : "See report →"}
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* Footer */}
+          <footer className="max-w-5xl w-full mx-auto border-t border-[#1A1A1A]/10 pt-8 mt-12 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
+            <div>
+              <span style={{fontFamily:"'Fraunces', Georgia, serif"}} className="text-lg font-bold tracking-tight text-[#1A1A1A]">gliss</span>
+              <p className="text-xs text-[#1A1A1A]/60 mt-0.5">
+                "gliss is where people with good taste go to learn something beautiful."
+              </p>
+            </div>
+            <div className="text-xs text-[#1A1A1A]/50 font-bold uppercase tracking-[0.12em]">
+              &copy; 2026 gliss. All rights reserved.
+            </div>
+          </footer>
+
+        </div>
+      );
+    }
+
+    // Mount
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+  </script>
+</body>
+</html>
